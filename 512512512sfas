@@ -1,0 +1,252 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+if playerGui:FindFirstChild("CustomUI") then
+    playerGui.CustomUI:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true -- Background covers whole screen incl header
+screenGui.Parent = playerGui
+
+-- Background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Animated particles
+local particleCount = 30
+local particles = {}
+for i = 1, particleCount do
+    local particle = Instance.new("Frame")
+    particle.Size = UDim2.new(0, 4, 0, 4)
+    particle.BackgroundColor3 = Color3.fromRGB(60, 100, 255)
+    particle.BackgroundTransparency = 0.7
+    particle.BorderSizePixel = 0
+    particle.AnchorPoint = Vector2.new(0.5, 0.5)
+    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    particle.Parent = background
+    particles[#particles + 1] = particle
+end
+
+spawn(function()
+    while background.Parent do
+        for _, p in ipairs(particles) do
+            local newX = p.Position.X.Scale + 0.002
+            local newY = p.Position.Y.Scale + 0.0015
+            if newX > 1 then newX = 0 end
+            if newY > 1 then newY = 0 end
+            p.Position = UDim2.new(newX, 0, newY, 0)
+        end
+        wait(0.03)
+    end
+end)
+
+-- Title Text with Gradient
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(1, 0, 0.1, 0)
+titleText.Position = UDim2.new(0, 0, 0.05, 0) -- Slightly below top header space
+titleText.BackgroundTransparency = 1
+titleText.Text = "Grow A Garden Script"
+titleText.Font = Enum.Font.GothamBold
+titleText.TextSize = 36
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.TextStrokeTransparency = 0.7
+titleText.TextXAlignment = Enum.TextXAlignment.Center
+titleText.Parent = background
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 127)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
+}
+gradient.Rotation = 45
+gradient.Parent = titleText
+
+-- Custom Loading Bar with percent text
+local function createLoadingBar(duration, color, loadingText)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0.6, 0, 0.06, 0)
+    container.Position = UDim2.new(0.2, 0, 0.5, 0)
+    container.AnchorPoint = Vector2.new(0, 0.5)
+    container.BackgroundTransparency = 1
+    container.Parent = background
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0.4, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = loadingText or "Loading..."
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 18
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.Parent = container
+
+    -- Loading bar background frame (transparent with subtle border)
+    local loadingBarBg = Instance.new("Frame")
+    loadingBarBg.Size = UDim2.new(1, 0, 0.6, 0)
+    loadingBarBg.Position = UDim2.new(0, 0, 0.4, 0)
+    loadingBarBg.BackgroundTransparency = 0.8
+    loadingBarBg.BorderSizePixel = 2
+    loadingBarBg.BorderColor3 = Color3.fromRGB(0, 170, 255)
+    loadingBarBg.Parent = container
+    loadingBarBg.ClipsDescendants = true
+    loadingBarBg.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+
+    -- Inner loading bar (transparent with subtle glow)
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Size = UDim2.new(0, 0, 1, 0)
+    loadingBar.BackgroundColor3 = color
+    loadingBar.BackgroundTransparency = 0.5
+    loadingBar.BorderSizePixel = 0
+    loadingBar.Parent = loadingBarBg
+
+    -- Glow effect for loading bar using UIStroke
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Thickness = 1.5
+    stroke.Transparency = 0.5
+    stroke.Parent = loadingBar
+
+    -- Percent text in loading bar, centered
+    local percentLabel = Instance.new("TextLabel")
+    percentLabel.Size = UDim2.new(1, 0, 1, 0)
+    percentLabel.BackgroundTransparency = 1
+    percentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    percentLabel.Font = Enum.Font.GothamBold
+    percentLabel.TextSize = 16
+    percentLabel.Text = "0%"
+    percentLabel.TextXAlignment = Enum.TextXAlignment.Center
+    percentLabel.TextYAlignment = Enum.TextYAlignment.Center
+    percentLabel.Parent = loadingBarBg
+
+    TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0
+    }):Play()
+
+    TweenService:Create(loadingBarBg, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.8
+    }):Play()
+
+    local startTime = tick()
+    local endTime = startTime + duration
+
+    local tween = TweenService:Create(loadingBar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(1, 0, 1, 0)
+    })
+    tween:Play()
+
+    -- Update percent label every frame
+    local connection
+    connection = game:GetService("RunService").RenderStepped:Connect(function()
+        local now = tick()
+        if now >= endTime then
+            percentLabel.Text = "100%"
+            connection:Disconnect()
+        else
+            local percent = math.floor(((now - startTime) / duration) * 100)
+            percentLabel.Text = tostring(percent) .. "%"
+        end
+    end)
+
+    tween.Completed:Wait()
+
+    TweenService:Create(container, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(loadingBarBg, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(loadingBar, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+
+    wait(0.5)
+    container:Destroy()
+end
+
+-- Create first loading bar
+createLoadingBar(5, Color3.fromRGB(0, 170, 255), "Loading Assets...")
+
+-- Buttons (do NOT ignore Roblox header, so centered inside screen excluding header)
+local buttonNames = {
+    "Server Hop",
+    "Pet and fruit (beta)",
+    "Spawn seed and egg",
+    "Egg reroll (unpatched)"
+}
+
+local buttons = {}
+
+for i, name in ipairs(buttonNames) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.6, 0, 0.08, 0)
+    -- Position inside screen (Y starts ~12% + index*12%)
+    button.Position = UDim2.new(0.2, 0, 0.12 + (i - 1) * 0.12, 0)
+    button.BackgroundColor3 = Color3.fromRGB(25, 30, 50)
+    button.BackgroundTransparency = 0.4
+    button.TextColor3 = Color3.fromRGB(180, 220, 255)
+    button.Text = name
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 20
+    button.AutoButtonColor = false
+    button.Parent = background
+
+    -- Gradient overlay for button background
+    local btnGradient = Instance.new("UIGradient")
+    btnGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 180)),
+    }
+    btnGradient.Rotation = 45
+    btnGradient.Parent = button
+
+    -- Button hover effects
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.3), {
+            BackgroundTransparency = 0,
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.3), {
+            BackgroundTransparency = 0.4,
+            TextColor3 = Color3.fromRGB(180, 220, 255)
+        }):Play()
+    end)
+
+    buttons[#buttons + 1] = button
+end
+
+local function onButtonClick(button)
+    for _, btn in pairs(buttons) do
+        btn.AutoButtonColor = false
+        btn.Active = false
+    end
+
+    for _, btn in pairs(buttons) do
+        TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            BackgroundTransparency = 1,
+            TextTransparency = 1,
+            Position = btn.Position + UDim2.new(0, 0, 0, 20)
+        }):Play()
+    end
+
+    wait(0.5)
+    for _, btn in pairs(buttons) do
+        btn:Destroy()
+    end
+    buttons = {}
+
+    createLoadingBar(30, Color3.fromRGB(0, 255, 127), "Loading, please wait...")
+
+    screenGui:Destroy()
+end
+
+for _, button in pairs(buttons) do
+    button.MouseButton1Click:Connect(function()
+        onButtonClick(button)
+    end)
+end
