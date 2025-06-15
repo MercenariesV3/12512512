@@ -1,0 +1,147 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+if playerGui:FindFirstChild("CustomUI") then
+    playerGui.CustomUI:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+-- Fullscreen background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Gradient effect
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 127))})
+gradient.Parent = background
+
+-- Main container
+local container = Instance.new("Frame")
+container.Size = UDim2.new(0.8, 0, 0.8, 0)
+container.Position = UDim2.new(0.1, 0, 0.1, 0)
+container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+container.BorderSizePixel = 0
+container.Parent = background
+
+-- UICorner for rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = container
+
+-- Left panel (navigation)
+local leftPanel = Instance.new("Frame")
+leftPanel.Size = UDim2.new(0.25, 0, 1, 0)
+leftPanel.Position = UDim2.new(0, 0, 0, 0)
+leftPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+leftPanel.BorderSizePixel = 0
+leftPanel.Parent = container
+
+-- UICorner for left panel
+local leftCorner = Instance.new("UICorner")
+leftCorner.CornerRadius = UDim.new(0, 12)
+leftCorner.Parent = leftPanel
+
+-- Right panel (content display)
+local rightPanel = Instance.new("Frame")
+rightPanel.Size = UDim2.new(0.75, 0, 1, 0)
+rightPanel.Position = UDim2.new(0.25, 0, 0, 0)
+rightPanel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+rightPanel.BorderSizePixel = 0
+rightPanel.Parent = container
+
+-- UICorner for right panel
+local rightCorner = Instance.new("UICorner")
+rightCorner.CornerRadius = UDim.new(0, 12)
+rightCorner.Parent = rightPanel
+
+-- Placeholder text
+local placeholder = Instance.new("TextLabel")
+placeholder.Size = UDim2.new(1, 0, 1, 0)
+placeholder.Position = UDim2.new(0, 0, 0, 0)
+placeholder.BackgroundTransparency = 1
+placeholder.Text = "Nothing to show here"
+placeholder.TextColor3 = Color3.fromRGB(200, 200, 200)
+placeholder.Font = Enum.Font.GothamBold
+placeholder.TextSize = 24
+placeholder.TextXAlignment = Enum.TextXAlignment.Center
+placeholder.TextYAlignment = Enum.TextYAlignment.Center
+placeholder.Parent = rightPanel
+
+-- Sections (buttons)
+local sections = {"Server Hop", "Pet and Fruit (Beta)", "Spawn Seed and Egg", "Egg Reroll (Unpatched)"}
+local sectionFrames = {}
+
+for i, name in ipairs(sections) do
+    local section = Instance.new("TextButton")
+    section.Size = UDim2.new(1, 0, 0.25, 0)
+    section.Position = UDim2.new(0, 0, (i - 1) * 0.25, 0)
+    section.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    section.TextColor3 = Color3.fromRGB(255, 255, 255)
+    section.Text = name
+    section.Font = Enum.Font.GothamBold
+    section.TextSize = 20
+    section.TextTransparency = 0.2
+    section.AutoButtonColor = false
+    section.Parent = leftPanel
+
+    -- UICorner for section
+    local sectionCorner = Instance.new("UICorner")
+    sectionCorner.CornerRadius = UDim.new(0, 12)
+    sectionCorner.Parent = section
+
+    -- UIGradient for gradient text
+    local sectionGradient = Instance.new("UIGradient")
+    sectionGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 127))})
+    sectionGradient.Parent = section
+
+    -- Mouse enter and leave effects
+    section.MouseEnter:Connect(function()
+        TweenService:Create(section, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(0, 170, 255),
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+    end)
+
+    section.MouseLeave:Connect(function()
+        TweenService:Create(section, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+    end)
+
+    -- Store section frames
+    sectionFrames[i] = section
+end
+
+-- Function to update right panel content
+local function updateContent(index)
+    placeholder.Visible = false
+    local content = Instance.new("TextLabel")
+    content.Size = UDim2.new(1, 0, 1, 0)
+    content.Position = UDim2.new(0, 0, 0, 0)
+    content.BackgroundTransparency = 1
+    content.Text = "Content for " .. sections[index]
+    content.TextColor3 = Color3.fromRGB(200, 200, 200)
+    content.Font = Enum.Font.GothamBold
+    content.TextSize = 24
+    content.TextXAlignment = Enum.TextXAlignment.Center
+    content.TextYAlignment = Enum.TextYAlignment.Center
+    content.Parent = rightPanel
+end
+
+-- Connect sections to update content
+for i, section in ipairs(sectionFrames) do
+    section.MouseButton1Click:Connect(function()
+        updateContent(i)
+    end)
+end
