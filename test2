@@ -1,0 +1,215 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Clear old UI if it exists
+if playerGui:FindFirstChild("CustomUI") then
+    playerGui.CustomUI:Destroy()
+end
+
+-- Main ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = false -- respects topbar
+screenGui.Parent = playerGui
+
+-- Background (ignores topbar only)
+local background = Instance.new("Frame")
+background.Name = "Background"
+background.Size = UDim2.new(1, 0, 1, 36) -- add 36px for topbar compensation
+background.Position = UDim2.new(0, 0, 0, -36)
+background.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+background.BorderSizePixel = 0
+background.ZIndex = 0
+background.Parent = screenGui
+
+-- Animated particles
+local particleCount = 30
+local particles = {}
+for i = 1, particleCount do
+    local particle = Instance.new("Frame")
+    particle.Size = UDim2.new(0, 4, 0, 4)
+    particle.BackgroundColor3 = Color3.fromRGB(60, 100, 255)
+    particle.BackgroundTransparency = 0.7
+    particle.BorderSizePixel = 0
+    particle.AnchorPoint = Vector2.new(0.5, 0.5)
+    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    particle.ZIndex = 0
+    particle.Parent = background
+    table.insert(particles, particle)
+end
+
+spawn(function()
+    while background.Parent do
+        for _, p in ipairs(particles) do
+            local newX = p.Position.X.Scale + 0.002
+            local newY = p.Position.Y.Scale + 0.0015
+            if newX > 1 then newX = 0 end
+            if newY > 1 then newY = 0 end
+            p.Position = UDim2.new(newX, 0, newY, 0)
+        end
+        task.wait(0.03)
+    end
+end)
+
+-- Title
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(1, 0, 0, 60)
+titleText.Position = UDim2.new(0, 0, 0, 20)
+titleText.BackgroundTransparency = 1
+titleText.Text = "Grow A Garden Script"
+titleText.Font = Enum.Font.FredokaOne
+titleText.TextSize = 40
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.TextStrokeTransparency = 0.7
+titleText.TextXAlignment = Enum.TextXAlignment.Center
+titleText.Parent = screenGui
+titleText.ZIndex = 1
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 127)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
+}
+gradient.Rotation = 45
+gradient.Parent = titleText
+
+-- Loading Bar Function
+local function createLoadingBar(duration, color, loadingText)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0.6, 0, 0.06, 0)
+    container.Position = UDim2.new(0.2, 0, 0.4, 0)
+    container.AnchorPoint = Vector2.new(0, 0.5)
+    container.BackgroundTransparency = 1
+    container.ZIndex = 1
+    container.Parent = screenGui
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0.4, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = loadingText or "Loading..."
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.FredokaOne
+    label.TextSize = 18
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.Parent = container
+
+    local loadingBarBg = Instance.new("Frame")
+    loadingBarBg.Size = UDim2.new(1, 0, 0.6, 0)
+    loadingBarBg.Position = UDim2.new(0, 0, 0.4, 0)
+    loadingBarBg.BackgroundTransparency = 0.8
+    loadingBarBg.BorderSizePixel = 2
+    loadingBarBg.BorderColor3 = Color3.fromRGB(0, 170, 255)
+    loadingBarBg.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+    loadingBarBg.ClipsDescendants = true
+    loadingBarBg.Parent = container
+
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Size = UDim2.new(0, 0, 1, 0)
+    loadingBar.BackgroundColor3 = color
+    loadingBar.BackgroundTransparency = 0.5
+    loadingBar.BorderSizePixel = 0
+    loadingBar.Parent = loadingBarBg
+
+    local percentLabel = Instance.new("TextLabel")
+    percentLabel.Size = UDim2.new(1, 0, 1, 0)
+    percentLabel.BackgroundTransparency = 1
+    percentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    percentLabel.Font = Enum.Font.FredokaOne
+    percentLabel.TextSize = 16
+    percentLabel.Text = "0%"
+    percentLabel.TextXAlignment = Enum.TextXAlignment.Center
+    percentLabel.TextYAlignment = Enum.TextYAlignment.Center
+    percentLabel.Parent = loadingBarBg
+
+    TweenService:Create(loadingBar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(1, 0, 1, 0)
+    }):Play()
+
+    local startTime = tick()
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        local now = tick()
+        local progress = math.min(1, (now - startTime) / duration)
+        percentLabel.Text = math.floor(progress * 100) .. "%"
+        if progress == 1 then
+            connection:Disconnect()
+        end
+    end)
+
+    task.wait(duration + 0.2)
+    container:Destroy()
+end
+
+-- Show loading
+createLoadingBar(3, Color3.fromRGB(0, 170, 255), "Loading Assets...")
+
+-- Buttons after loading
+task.wait(0.2)
+
+local buttonContainer = Instance.new("Frame")
+buttonContainer.Size = UDim2.new(0.5, 0, 0.4, 0)
+buttonContainer.Position = UDim2.new(0.25, 0, 0.55, 0)
+buttonContainer.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
+buttonContainer.BackgroundTransparency = 0.2
+buttonContainer.BorderSizePixel = 0
+buttonContainer.Parent = screenGui
+
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 12)
+uicorner.Parent = buttonContainer
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 8)
+listLayout.FillDirection = Enum.FillDirection.Vertical
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Parent = buttonContainer
+
+local buttonNames = {
+    "Server Hop",
+    "Pet and fruit (beta)",
+    "Spawn seed and egg",
+    "Egg reroll (unpatched)"
+}
+
+for _, name in ipairs(buttonNames) do
+    local section = Instance.new("TextButton")
+    section.Size = UDim2.new(1, -20, 0, 40)
+    section.BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+    section.BackgroundTransparency = 0.2
+    section.BorderSizePixel = 0
+    section.Text = name
+    section.Font = Enum.Font.FredokaOne
+    section.TextSize = 18
+    section.TextColor3 = Color3.fromRGB(200, 230, 255)
+    section.AutoButtonColor = false
+    section.Parent = buttonContainer
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = section
+
+    section.MouseEnter:Connect(function()
+        TweenService:Create(section, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(40, 50, 70)
+        }):Play()
+    end)
+    section.MouseLeave:Connect(function()
+        TweenService:Create(section, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(30, 35, 55)
+        }):Play()
+    end)
+
+    section.MouseButton1Click:Connect(function()
+        buttonContainer:Destroy()
+        createLoadingBar(3, Color3.fromRGB(0, 255, 127), "Loading " .. name .. "...")
+        task.wait(0.5)
+        screenGui:Destroy()
+    end)
+end
