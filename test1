@@ -1,0 +1,83 @@
+-- Full Updated Script
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+-- Clear old UI if it exists
+if playerGui:FindFirstChild("CustomUI") then
+    playerGui.CustomUI:Destroy()
+end
+
+-- Main ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = false -- Don't ignore topbar globally
+screenGui.Parent = playerGui
+
+-- Background (ignores topbar only for this element)
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Set IgnoreGuiInset only for background
+screenGui.IgnoreGuiInset = true -- temporarily set to true to allow background full coverage
+screenGui.IgnoreGuiInset = false -- reset to false for others
+
+-- Animated particles
+local particleCount = 30
+local particles = {}
+for i = 1, particleCount do
+    local particle = Instance.new("Frame")
+    particle.Size = UDim2.new(0, 4, 0, 4)
+    particle.BackgroundColor3 = Color3.fromRGB(60, 100, 255)
+    particle.BackgroundTransparency = 0.7
+    particle.BorderSizePixel = 0
+    particle.AnchorPoint = Vector2.new(0.5, 0.5)
+    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    particle.Parent = background
+    table.insert(particles, particle)
+end
+
+spawn(function()
+    while background.Parent do
+        for _, p in ipairs(particles) do
+            local newX = p.Position.X.Scale + 0.002
+            local newY = p.Position.Y.Scale + 0.0015
+            if newX > 1 then newX = 0 end
+            if newY > 1 then newY = 0 end
+            p.Position = UDim2.new(newX, 0, newY, 0)
+        end
+        wait(0.03)
+    end
+end)
+
+-- Title
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(1, 0, 0, 50)
+titleText.Position = UDim2.new(0, 0, 0, 36)
+titleText.BackgroundTransparency = 1
+titleText.Text = "Grow A Garden Script"
+titleText.Font = Enum.Font.FredokaOne -- smoother font
+titleText.TextSize = 40
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.TextStrokeTransparency = 0.7
+titleText.TextXAlignment = Enum.TextXAlignment.Center
+titleText.TextYAlignment = Enum.TextYAlignment.Center
+titleText.Parent = screenGui
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 127)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
+}
+gradient.Rotation = 45
+gradient.Parent = titleText
+
+-- NOTE: Please re-attach the rest of your code (loading bars, buttonContainer, button logic, etc.) below this section if needed.
+-- The top portion has been fixed to align all elements below the topbar and uses a cleaner font.
