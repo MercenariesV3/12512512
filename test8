@@ -1,0 +1,230 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+-- Clean up existing UI
+if playerGui:FindFirstChild("CustomUI") then
+	playerGui.CustomUI:Destroy()
+end
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+-- Background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 36) -- +36 to compensate for top bar
+background.Position = UDim2.new(0, 0, 0, -36)
+background.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Particles
+local particles = {}
+for i = 1, 30 do
+	local p = Instance.new("Frame")
+	p.Size = UDim2.new(0, 4, 0, 4)
+	p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+	p.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+	p.BackgroundTransparency = 0.8
+	p.BorderSizePixel = 0
+	p.AnchorPoint = Vector2.new(0.5, 0.5)
+	p.Parent = background
+	table.insert(particles, p)
+end
+
+task.spawn(function()
+	while background.Parent do
+		for _, p in ipairs(particles) do
+			local newX = p.Position.X.Scale + 0.002
+			local newY = p.Position.Y.Scale + 0.0015
+			if newX > 1 then newX = 0 end
+			if newY > 1 then newY = 0 end
+			p.Position = UDim2.new(newX, 0, newY, 0)
+		end
+		task.wait(0.03)
+	end
+end)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0.15, 0)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Garden Scripts"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 36
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextStrokeTransparency = 0.6
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextYAlignment = Enum.TextYAlignment.Center
+title.Parent = background
+
+-- Subtitle (creator credit)
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(0, 200, 0, 20)
+credit.Position = UDim2.new(1, -210, 0.15, 40)
+credit.BackgroundTransparency = 1
+credit.Text = "Made by pr1m0"
+credit.Font = Enum.Font.FredokaOne
+credit.TextSize = 14
+credit.TextColor3 = Color3.fromRGB(180, 180, 180)
+credit.TextXAlignment = Enum.TextXAlignment.Right
+credit.Parent = background
+
+-- Loading bar function
+local function createLoadingBar(duration, text)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0.5, 0, 0, 60)
+	container.AnchorPoint = Vector2.new(0.5, 0.5)
+	container.Position = UDim2.new(0.5, 0, 0.5, 0)
+	container.BackgroundTransparency = 1
+	container.Parent = background
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0.4, 0)
+	label.Position = UDim2.new(0, 0, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.Font = Enum.Font.FredokaOne
+	label.TextSize = 18
+	label.TextColor3 = Color3.fromRGB(220, 220, 220)
+	label.TextXAlignment = Enum.TextXAlignment.Center
+	label.Parent = container
+
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.new(1, 0, 0.5, 0)
+	bg.Position = UDim2.new(0, 0, 0.5, 0)
+	bg.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	bg.BackgroundTransparency = 0.5
+	bg.BorderSizePixel = 0
+	bg.Parent = container
+	bg.ClipsDescendants = true
+
+	local bar = Instance.new("Frame")
+	bar.Size = UDim2.new(0, 0, 1, 0)
+	bar.BackgroundTransparency = 0.2
+	bar.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
+	bar.BorderSizePixel = 0
+	bar.Parent = bg
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 1
+	stroke.Transparency = 0.3
+	stroke.Color = Color3.fromRGB(0, 255, 127)
+	stroke.Parent = bar
+
+	local percent = Instance.new("TextLabel")
+	percent.Size = UDim2.new(1, 0, 1, 0)
+	percent.BackgroundTransparency = 1
+	percent.Font = Enum.Font.FredokaOne
+	percent.TextSize = 14
+	percent.TextColor3 = Color3.fromRGB(255, 255, 255)
+	percent.Text = "0%"
+	percent.TextXAlignment = Enum.TextXAlignment.Center
+	percent.TextYAlignment = Enum.TextYAlignment.Center
+	percent.Parent = bg
+
+	local startTime = tick()
+	local tween = TweenService:Create(bar, TweenInfo.new(duration), {Size = UDim2.new(1, 0, 1, 0)})
+	tween:Play()
+
+	local connection
+	connection = game:GetService("RunService").RenderStepped:Connect(function()
+		local now = tick()
+		local percentComplete = math.clamp((now - startTime) / duration, 0, 1)
+		percent.Text = math.floor(percentComplete * 100) .. "%"
+		if percentComplete == 1 then
+			connection:Disconnect()
+		end
+	end)
+
+	tween.Completed:Wait()
+	wait(0.3)
+	container:Destroy()
+end
+
+-- Show startup loading bar (5 seconds)
+createLoadingBar(5, "Loading Assets...")
+
+-- Script button container
+local container = Instance.new("Frame")
+container.Size = UDim2.new(0.5, 0, 0.4, 0)
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Position = UDim2.new(0.5, 0, 0.6, 0)
+container.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+container.BackgroundTransparency = 0.2
+container.BorderSizePixel = 0
+container.Parent = background
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = container
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = container
+
+-- Title above the buttons
+local containerTitle = Instance.new("TextLabel")
+containerTitle.Size = UDim2.new(1, 0, 0, 30)
+containerTitle.BackgroundTransparency = 1
+containerTitle.Text = "Select Available Scripts"
+containerTitle.Font = Enum.Font.FredokaOne
+containerTitle.TextSize = 20
+containerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+containerTitle.Parent = container
+
+-- Buttons
+local buttonLabels = {
+	"Server Hop",
+	"Pet and fruit (beta)",
+	"Spawn seed and egg",
+	"Egg reroll (unpatched)"
+}
+
+local function createScriptButton(text)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -20, 0, 36)
+	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	button.BackgroundTransparency = 0.2
+	button.Text = text
+	button.TextColor3 = Color3.fromRGB(200, 230, 255)
+	button.Font = Enum.Font.FredokaOne
+	button.TextSize = 18
+	button.AutoButtonColor = false
+	button.Parent = container
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = button
+
+	button.MouseEnter:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.2), {
+			BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		}):Play()
+	end)
+	button.MouseLeave:Connect(function()
+		TweenService:Create(button, TweenInfo.new(0.2), {
+			BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		}):Play()
+	end)
+
+	button.MouseButton1Click:Connect(function()
+		container:Destroy()
+		title:Destroy()
+		credit:Destroy()
+		createLoadingBar(5, "Running script...")
+		screenGui:Destroy()
+	end)
+end
+
+for _, name in ipairs(buttonLabels) do
+	createScriptButton(name)
+end
