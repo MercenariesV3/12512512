@@ -1,0 +1,132 @@
+-- Services
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+-- Clear old UI
+if playerGui:FindFirstChild("CustomUI") then
+	playerGui.CustomUI:Destroy()
+end
+
+-- ScreenGui setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 9999
+screenGui.Parent = playerGui
+
+-- Background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 100)
+background.Position = UDim2.new(0, 0, 0, -100)
+background.BackgroundColor3 = Color3.fromRGB(180, 230, 180)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 230, 180)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 206, 250))
+}
+gradient.Rotation = 45
+gradient.Parent = background
+
+-- Vignette
+local vignette = Instance.new("ImageLabel")
+vignette.Size = UDim2.new(1, 0, 1, 0)
+vignette.Position = UDim2.new(0, 0, 0, 0)
+vignette.BackgroundTransparency = 1
+vignette.Image = "rbxassetid://13513551472"
+vignette.ImageTransparency = 0.5
+vignette.ZIndex = 5
+vignette.Parent = background
+
+-- Particles
+local particleEmitter = Instance.new("ParticleEmitter")
+particleEmitter.Texture = "rbxassetid://1181042416"
+particleEmitter.Lifetime = NumberRange.new(2)
+particleEmitter.Rate = 6
+particleEmitter.Speed = NumberRange.new(0.5, 1)
+particleEmitter.Size = NumberSequence.new(0.5)
+particleEmitter.LightEmission = 1
+particleEmitter.Transparency = NumberSequence.new(0.3)
+particleEmitter.Parent = background
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0.12, 0)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Garden Script"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 42
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextStrokeTransparency = 0.8
+title.TextTransparency = 1
+title.TextStrokeColor3 = Color3.new(0, 0, 0)
+title.TextStrokeTransparency = 0.4
+title.Parent = screenGui
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(0, 200, 0, 20)
+subtitle.Position = UDim2.new(0.8, 0, 0.13, 0)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "made by pr1m0"
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextSize = 14
+subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+subtitle.TextXAlignment = Enum.TextXAlignment.Right
+subtitle.TextStrokeTransparency = 0.8
+subtitle.TextTransparency = 1
+subtitle.TextStrokeColor3 = Color3.new(0, 0, 0)
+subtitle.TextStrokeTransparency = 0.4
+subtitle.Parent = screenGui
+
+-- Warning Text (centered better)
+local warningText = Instance.new("TextLabel")
+warningText.Size = UDim2.new(1, 0, 0, 30)
+warningText.Position = UDim2.new(0, 0, 0.7, 0)
+warningText.BackgroundTransparency = 1
+warningText.Text = "⚠️ Leaving the game while this script is running may corrupt your data."
+warningText.Font = Enum.Font.FredokaOne
+warningText.TextSize = 20
+warningText.TextColor3 = Color3.new(1, 1, 1)
+warningText.TextStrokeTransparency = 0.7
+warningText.TextTransparency = 1
+warningText.TextStrokeColor3 = Color3.new(0, 0, 0)
+warningText.TextStrokeTransparency = 0.4
+warningText.Parent = screenGui
+
+TweenService:Create(title, TweenInfo.new(1), {TextTransparency = 0}):Play()
+TweenService:Create(subtitle, TweenInfo.new(1), {TextTransparency = 0}):Play()
+TweenService:Create(warningText, TweenInfo.new(1), {TextTransparency = 0}):Play()
+
+-- Loading Screens
+local loadingText = Instance.new("TextLabel")
+loadingText.Size = UDim2.new(1, 0, 0, 40)
+loadingText.Position = UDim2.new(0, 0, 0.5, -20)
+loadingText.BackgroundTransparency = 1
+loadingText.Text = "Loading..."
+loadingText.Font = Enum.Font.FredokaOne
+loadingText.TextSize = 32
+loadingText.TextColor3 = Color3.new(1, 1, 1)
+loadingText.TextStrokeColor3 = Color3.new(0, 0, 0)
+loadingText.TextStrokeTransparency = 0.4
+loadingText.Parent = screenGui
+
+-- First Loading: Smooth from 0% to 100% in 5 seconds
+for i = 0, 100 do
+	loadingText.Text = "Loading... " .. i .. "%"
+	wait(5 / 100) -- 5 seconds total
+end
+
+wait(1)
+
+-- Final Loading: Fake stuck at 100% for 2 minutes
+loadingText.Text = "Loading... 100%"
+wait(120) -- 2 minutes
+
+-- Fade out loading text
+TweenService:Create(loadingText, TweenInfo.new(1), {TextTransparency = 1}):Play()
