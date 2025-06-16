@@ -1,0 +1,227 @@
+-- Services
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Clear old UI
+if playerGui:FindFirstChild("CustomUI") then
+	playerGui.CustomUI:Destroy()
+end
+
+-- ScreenGui setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+-- Background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.fromRGB(180, 230, 180)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 230, 180)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 206, 250))
+}
+gradient.Rotation = 45
+gradient.Parent = background
+
+-- Blur and dim layer
+local blurOverlay = Instance.new("Frame")
+blurOverlay.Size = UDim2.new(1, 0, 1, 0)
+blurOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+blurOverlay.BackgroundTransparency = 0.6
+blurOverlay.BorderSizePixel = 0
+blurOverlay.ZIndex = 2
+blurOverlay.Parent = background
+
+-- Blur Effect
+local blurEffect = Instance.new("BlurEffect")
+blurEffect.Size = 12
+blurEffect.Parent = game.Lighting
+
+-- Continuous Emoji Rain
+local emojiAssets = {"🦝","🦊","🌳","🍎","💧","🍓","🍋"}
+task.spawn(function()
+	while screenGui do
+		local emoji = emojiAssets[math.random(1, #emojiAssets)]
+		local emitter = Instance.new("TextLabel")
+		emitter.Text = emoji
+		emitter.Font = Enum.Font.FredokaOne
+		emitter.TextSize = 26
+		emitter.TextColor3 = Color3.new(1,1,1)
+		emitter.BackgroundTransparency = 1
+		emitter.Size = UDim2.new(0, 26, 0, 26)
+		emitter.Position = UDim2.new(math.random(), 0, -0.1, 0)
+		emitter.Parent = background
+		emitter.ZIndex = 3
+		emitter.TextStrokeTransparency = 0.6
+		TweenService:Create(emitter, TweenInfo.new(math.random(6,10), Enum.EasingStyle.Linear), {
+			Position = UDim2.new(emitter.Position.X.Scale, 0, 1.2, 0),
+			TextTransparency = 1
+		}):Play()
+		task.delay(math.random(6, 10), function()
+			if emitter then emitter:Destroy() end
+		end)
+		wait(0.25)
+	end
+end)
+
+-- Vignette
+local vignette = Instance.new("ImageLabel")
+vignette.Size = UDim2.new(1, 0, 1, 0)
+vignette.Position = UDim2.new(0, 0, 0, 0)
+vignette.BackgroundTransparency = 1
+vignette.Image = "rbxassetid://13513551472"
+vignette.ImageTransparency = 0.5
+vignette.ZIndex = 5
+vignette.Parent = background
+
+-- Text shadow helper
+local function withShadow(label)
+	local shadow = Instance.new("TextLabel")
+	shadow.Size = label.Size
+	shadow.Position = label.Position + UDim2.new(0, 2, 0, 2)
+	shadow.BackgroundTransparency = 1
+	shadow.Text = label.Text
+	shadow.Font = label.Font
+	shadow.TextSize = label.TextSize
+	shadow.TextColor3 = Color3.new(0, 0, 0)
+	shadow.TextTransparency = label.TextTransparency
+	shadow.TextStrokeTransparency = 1
+	shadow.ZIndex = label.ZIndex - 1
+	shadow.Parent = label.Parent
+	return shadow
+end
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0.12, 0)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Garden Script"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 42
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextStrokeTransparency = 0.8
+title.TextTransparency = 1
+title.ZIndex = 10
+title.Parent = screenGui
+withShadow(title)
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(0, 200, 0, 20)
+subtitle.Position = UDim2.new(0.8, 0, 0.13, 0)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "made by pr1m0"
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextSize = 14
+subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+subtitle.TextXAlignment = Enum.TextXAlignment.Right
+subtitle.TextStrokeTransparency = 1
+subtitle.TextTransparency = 1
+subtitle.ZIndex = 10
+subtitle.Parent = screenGui
+withShadow(subtitle)
+
+-- Warning Text (centerish)
+local warningText = Instance.new("TextLabel")
+warningText.Size = UDim2.new(1, 0, 0, 30)
+warningText.Position = UDim2.new(0, 0, 0.6, 0)
+warningText.BackgroundTransparency = 1
+warningText.Text = "⚠️ Leaving the game while this script is running may corrupt your data."
+warningText.Font = Enum.Font.FredokaOne
+warningText.TextSize = 20
+warningText.TextColor3 = Color3.new(1, 1, 1)
+warningText.TextStrokeTransparency = 0.7
+warningText.TextTransparency = 1
+warningText.ZIndex = 10
+warningText.Parent = screenGui
+withShadow(warningText)
+
+TweenService:Create(title, TweenInfo.new(1), {TextTransparency = 0}):Play()
+TweenService:Create(subtitle, TweenInfo.new(1), {TextTransparency = 0}):Play()
+TweenService:Create(warningText, TweenInfo.new(1), {TextTransparency = 0}):Play()
+
+-- Cartoon Loading Bar
+local function createCartoonLoadingBar(duration, labelText, callback, isFinal)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0.5, 0, 0.07, 0)
+	container.Position = UDim2.new(0.25, 0, 0.5, 0)
+	container.BackgroundTransparency = 1
+	container.ZIndex = 20
+	container.Parent = screenGui
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0.4, 0)
+	label.Position = UDim2.new(0, 0, -0.6, 0)
+	label.Text = labelText or "Loading..."
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.FredokaOne
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextSize = 20
+	label.TextStrokeTransparency = 0.8
+	label.Parent = container
+	withShadow(label)
+
+	local bg = Instance.new("ImageLabel")
+	bg.Size = UDim2.new(1, 0, 0.6, 0)
+	bg.Position = UDim2.new(0, 0, 0.4, 0)
+	bg.BackgroundTransparency = 1
+	bg.Image = "rbxassetid://607247449"
+	bg.ScaleType = Enum.ScaleType.Slice
+	bg.SliceCenter = Rect.new(10, 10, 90, 90)
+	bg.Parent = container
+
+	local fill = Instance.new("Frame")
+	fill.Size = UDim2.new(0, 0, 1, 0)
+	fill.BackgroundColor3 = Color3.fromRGB(102, 255, 102)
+	fill.BorderSizePixel = 0
+	fill.BackgroundTransparency = 0.2
+	fill.Parent = bg
+
+	Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 12)
+	Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 12)
+
+	local percent = Instance.new("TextLabel")
+	percent.Size = UDim2.new(1, 0, 1, 0)
+	percent.BackgroundTransparency = 1
+	percent.Text = "0%"
+	percent.Font = Enum.Font.FredokaOne
+	percent.TextColor3 = Color3.new(1, 1, 1)
+	percent.TextSize = 16
+	percent.TextStrokeTransparency = 0.8
+	percent.Parent = bg
+	withShadow(percent)
+
+	task.spawn(function()
+		local current = 0
+		local stucks = {20, 60, 95}
+		for i = 1, 100 do
+			current = i
+			fill.Size = UDim2.new(current / 100, 0, 1, 0)
+			percent.Text = current .. "%"
+			if table.find(stucks, i) then
+				wait(1)
+			else
+				wait(duration / 100)
+			end
+		end
+		if not isFinal then
+			wait(0.5)
+			TweenService:Create(container, TweenInfo.new(0.5), {Position = UDim2.new(0.25, 0, 1.2, 0)}):Play()
+			wait(0.5)
+			container:Destroy()
+			if callback then callback() end
+		end
+	end)
+end
+
+-- Example usage:
+-- createCartoonLoadingBar(10, "Fetching Scripts...", function() end)
+-- createCartoonLoadingBar(60, "Finalizing...", nil, true)
