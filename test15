@@ -1,0 +1,204 @@
+--// FULL REWORKED GUI WITH CARTOONISH STYLE, TEXT SHADOWS, HOVER LABELS, AND SMART LOADER
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+if playerGui:FindFirstChild("CustomUI") then
+    playerGui.CustomUI:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.fromRGB(110, 180, 255)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+local cloud = Instance.new("ImageLabel")
+cloud.Image = "rbxassetid://5105869903" -- cartoony cloud
+cloud.Size = UDim2.new(0.3, 0, 0.2, 0)
+cloud.Position = UDim2.new(-0.3, 0, 0.1, 0)
+cloud.BackgroundTransparency = 1
+cloud.ImageTransparency = 0.1
+cloud.Parent = background
+
+TweenService:Create(cloud, TweenInfo.new(20, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), {
+    Position = UDim2.new(1, 0, 0.1, 0)
+}):Play()
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0.12, 0)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Garden Script"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 40
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextStrokeTransparency = 1
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextYAlignment = Enum.TextYAlignment.Center
+title.Parent = screenGui
+
+local titleShadow = title:Clone()
+titleShadow.TextColor3 = Color3.fromRGB(30, 30, 30)
+titleShadow.Position = UDim2.new(0, 2, 0.12, 2)
+titleShadow.ZIndex = title.ZIndex - 1
+titleShadow.Parent = screenGui
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(0, 200, 0, 20)
+subtitle.Position = UDim2.new(0.8, 0, 0.13, 0)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "made by pr1m0"
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextSize = 14
+subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+subtitle.TextXAlignment = Enum.TextXAlignment.Right
+subtitle.Parent = screenGui
+
+-- Loading Bar
+local function createCartoonLoadingBar(duration)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0.6, 0, 0.06, 0)
+    container.Position = UDim2.new(0.2, 0, 0.5, 0)
+    container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    container.BorderSizePixel = 4
+    container.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    container.Parent = screenGui
+
+    local fill = Instance.new("Frame")
+    fill.BackgroundColor3 = Color3.fromRGB(255, 215, 100)
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.BorderSizePixel = 0
+    fill.Parent = container
+
+    local percentLabel = Instance.new("TextLabel")
+    percentLabel.Size = UDim2.new(1, 0, 1, 0)
+    percentLabel.BackgroundTransparency = 1
+    percentLabel.Text = "0%"
+    percentLabel.Font = Enum.Font.FredokaOne
+    percentLabel.TextSize = 18
+    percentLabel.TextColor3 = Color3.new(1, 1, 1)
+    percentLabel.Parent = container
+
+    local shadow = percentLabel:Clone()
+    shadow.TextColor3 = Color3.fromRGB(30, 30, 30)
+    shadow.Position = UDim2.new(0, 2, 0, 2)
+    shadow.ZIndex = percentLabel.ZIndex - 1
+    shadow.Parent = container
+
+    local current = 0
+    local goal = 100
+    local start = tick()
+    local pausePoints = {15, 36, 72, 85}
+    local nextPause = 1
+
+    while current <= goal do
+        local now = tick()
+        local elapsed = now - start
+        local target = math.floor(elapsed / duration * 100)
+        if target > current then
+            current = current + 1
+            fill.Size = UDim2.new(current / 100, 0, 1, 0)
+            percentLabel.Text = current .. "%"
+            shadow.Text = current .. "%"
+        end
+
+        if nextPause <= #pausePoints and current == pausePoints[nextPause] then
+            wait(math.random(0.3, 0.8))
+            nextPause += 1
+        else
+            wait(0.05)
+        end
+    end
+
+    wait(0.5)
+    container:Destroy()
+end
+
+createCartoonLoadingBar(10)
+
+-- Selection Menu
+local selectFrame = Instance.new("Frame")
+selectFrame.Size = UDim2.new(0.4, 0, 0.5, 0)
+selectFrame.Position = UDim2.new(0.3, 0, 0.35, 0)
+selectFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+selectFrame.BorderSizePixel = 4
+selectFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+selectFrame.Parent = screenGui
+
+local layout = Instance.new("UIListLayout")
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+layout.Padding = UDim.new(0, 8)
+layout.Parent = selectFrame
+
+local buttons = {
+    {"Server Hop (Old Server)", "Fixing", Color3.fromRGB(255, 175, 0)},
+    {"Pet and fruit (beta)"},
+    {"Spawn seed and egg", "Patched", Color3.fromRGB(150, 150, 150)},
+    {"Egg reroll (unpatched)"},
+}
+
+for _, data in ipairs(buttons) do
+    local label, status, color = unpack(data)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, 40)
+    button.BackgroundColor3 = color or Color3.fromRGB(100, 200, 100)
+    button.BorderSizePixel = 0
+    button.Text = ""
+    button.AutoButtonColor = status == "Patched"
+    button.Parent = selectFrame
+
+    local txt = Instance.new("TextLabel")
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.Text = label
+    txt.BackgroundTransparency = 1
+    txt.Font = Enum.Font.FredokaOne
+    txt.TextSize = 18
+    txt.TextColor3 = Color3.fromRGB(255, 255, 255)
+    txt.TextStrokeTransparency = 1
+    txt.Parent = button
+
+    local shadow = txt:Clone()
+    shadow.TextColor3 = Color3.fromRGB(30, 30, 30)
+    shadow.Position = UDim2.new(0, 2, 0, 2)
+    shadow.ZIndex = txt.ZIndex - 1
+    shadow.Parent = button
+
+    if status then
+        local hoverText = Instance.new("TextLabel")
+        hoverText.Size = UDim2.new(1, 0, 1, 0)
+        hoverText.Text = status == "Fixing" and "Currently Fixing" or "Patched"
+        hoverText.Font = Enum.Font.FredokaOne
+        hoverText.TextColor3 = Color3.fromRGB(255, 100, 100)
+        hoverText.TextSize = 16
+        hoverText.TextTransparency = 1
+        hoverText.BackgroundTransparency = 1
+        hoverText.Parent = button
+
+        button.MouseEnter:Connect(function()
+            hoverText.TextTransparency = 0
+        end)
+        button.MouseLeave:Connect(function()
+            hoverText.TextTransparency = 1
+        end)
+    else
+        button.MouseButton1Click:Connect(function()
+            screenGui:ClearAllChildren()
+            createCartoonLoadingBar(10)
+        end)
+    end
+end
