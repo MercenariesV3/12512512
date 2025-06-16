@@ -1,0 +1,230 @@
+-- Roblox GUI Rework Script
+-- Changes:
+-- 1. Animated particles background (enhanced)
+-- 2. Extended loading screen to 10s with random stalling effect
+-- 3. Redesigned cartoonish loading bar
+-- 4. Container buttons restyled + patched label
+--
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+if playerGui:FindFirstChild("CustomUI") then
+    playerGui.CustomUI:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Animated Background with particle movement
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+background.BorderSizePixel = 0
+background.ClipsDescendants = true
+background.Parent = screenGui
+
+-- More dynamic particles
+for i = 1, 40 do
+    local particle = Instance.new("Frame")
+    particle.Size = UDim2.new(0, math.random(2, 6), 0, math.random(2, 6))
+    particle.BackgroundColor3 = Color3.fromRGB(math.random(150,200), math.random(150,200), math.random(150,200))
+    particle.BackgroundTransparency = 0.6
+    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    particle.BorderSizePixel = 0
+    particle.Parent = background
+
+    coroutine.wrap(function()
+        while particle.Parent do
+            local goal = UDim2.new(math.random(), 0, math.random(), 0)
+            TweenService:Create(particle, TweenInfo.new(math.random(2, 4), Enum.EasingStyle.Linear), {Position = goal}):Play()
+            wait(math.random(2, 5))
+        end
+    end)()
+end
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0.12, 0)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Garden Script"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 40
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextStrokeTransparency = 0.4
+title.Parent = screenGui
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 200, 200)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 160, 160))
+}
+gradient.Parent = title
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(0, 200, 0, 20)
+subtitle.Position = UDim2.new(0.8, 0, 0.13, 0)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "made by pr1m0"
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextSize = 14
+subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+subtitle.TextXAlignment = Enum.TextXAlignment.Right
+subtitle.Parent = screenGui
+
+-- Fancy Cartoon Loading Bar
+local function createFancyLoadingBar(duration, text)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0.6, 0, 0.06, 0)
+    container.Position = UDim2.new(0.2, 0, 0.5, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = screenGui
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0.4, 0)
+    label.Position = UDim2.new(0, 0, -0.6, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text or "Loading..."
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.FredokaOne
+    label.TextSize = 20
+    label.Parent = container
+
+    local bg = Instance.new("ImageLabel")
+    bg.Size = UDim2.new(1, 0, 0.6, 0)
+    bg.Position = UDim2.new(0, 0, 0.4, 0)
+    bg.Image = "rbxassetid://6071575925" -- Cartoon rounded bar
+    bg.ScaleType = Enum.ScaleType.Slice
+    bg.SliceCenter = Rect.new(5, 5, 95, 95)
+    bg.BackgroundTransparency = 1
+    bg.ImageColor3 = Color3.fromRGB(50, 50, 50)
+    bg.Parent = container
+
+    local fill = Instance.new("ImageLabel")
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.Image = "rbxassetid://6071575925"
+    fill.SliceCenter = Rect.new(5, 5, 95, 95)
+    fill.ScaleType = Enum.ScaleType.Slice
+    fill.BackgroundTransparency = 1
+    fill.ImageColor3 = Color3.fromRGB(120, 200, 120)
+    fill.Parent = bg
+
+    local percent = Instance.new("TextLabel")
+    percent.Size = UDim2.new(1, 0, 1, 0)
+    percent.BackgroundTransparency = 1
+    percent.Text = "0%"
+    percent.Font = Enum.Font.FredokaOne
+    percent.TextColor3 = Color3.fromRGB(255, 255, 255)
+    percent.TextSize = 16
+    percent.Parent = bg
+
+    local startTime = tick()
+    local endTime = startTime + duration
+    local lastUpdate = tick()
+    local currentProgress = 0
+
+    coroutine.wrap(function()
+        while tick() < endTime do
+            local now = tick()
+            if now - lastUpdate > math.random(0.1, 0.4) then
+                currentProgress = math.clamp((now - startTime) / duration, 0, 1)
+                local displayProgress = currentProgress + math.random(-5, 5) / 100
+                displayProgress = math.clamp(displayProgress, 0, 1)
+                percent.Text = math.floor(displayProgress * 100) .. "%"
+                fill.Size = UDim2.new(displayProgress, 0, 1, 0)
+                lastUpdate = now
+            end
+            wait()
+        end
+        fill.Size = UDim2.new(1, 0, 1, 0)
+        percent.Text = "100%"
+    end)()
+
+    wait(duration)
+    return container
+end
+
+createFancyLoadingBar(10, "Loading Assets..."):Destroy()
+
+-- Button Container
+local selectFrame = Instance.new("Frame")
+selectFrame.Size = UDim2.new(0.4, 0, 0.5, 0)
+selectFrame.Position = UDim2.new(0.3, 0, 0.35, 0)
+selectFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+selectFrame.BorderSizePixel = 0
+selectFrame.Parent = screenGui
+
+local layout = Instance.new("UIListLayout")
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+layout.Padding = UDim.new(0, 10)
+layout.Parent = selectFrame
+
+local topSpacer = Instance.new("Frame")
+topSpacer.Size = UDim2.new(1, 0, 0, 10)
+topSpacer.BackgroundTransparency = 1
+topSpacer.Parent = selectFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -20, 0, 30)
+titleLabel.Text = "Select Available Scripts"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.FredokaOne
+titleLabel.TextSize = 22
+titleLabel.BackgroundTransparency = 1
+titleLabel.Parent = selectFrame
+
+-- Script buttons
+local buttonData = {
+    {"Server Hop", true},
+    {"Pet and fruit (beta)", true},
+    {"Spawn seed and egg", false},
+    {"Egg reroll (unpatched)", true},
+}
+
+for _, data in ipairs(buttonData) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, 40)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.BorderSizePixel = 0
+    button.Text = ""
+    button.AutoButtonColor = data[2]
+    button.Parent = selectFrame
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = data[1]
+    text.Font = Enum.Font.FredokaOne
+    text.TextSize = 16
+    text.TextColor3 = data[2] and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 80, 80)
+    text.TextXAlignment = Enum.TextXAlignment.Center
+    text.Parent = button
+
+    if not data[2] then
+        local patchNote = Instance.new("TextLabel")
+        patchNote.Size = UDim2.new(1, 0, 1, 0)
+        patchNote.BackgroundTransparency = 1
+        patchNote.Text = "[PATCHED]"
+        patchNote.Font = Enum.Font.FredokaOne
+        patchNote.TextColor3 = Color3.fromRGB(255, 80, 80)
+        patchNote.TextSize = 14
+        patchNote.Position = UDim2.new(0, 0, 0, -20)
+        patchNote.Parent = button
+        button.Active = false
+    else
+        button.MouseButton1Click:Connect(function()
+            title.Visible = false
+            subtitle.Visible = false
+            selectFrame:Destroy()
+            createFancyLoadingBar(10, "Loading, please wait...")
+        end)
+    end
+end
