@@ -1,0 +1,237 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+
+-- Clear old UI
+if playerGui:FindFirstChild("CustomUI") then
+	playerGui.CustomUI:Destroy()
+end
+
+-- ScreenGui setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+-- Background
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.fromRGB(180, 230, 180)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 230, 180)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 206, 250))
+}
+gradient.Rotation = 45
+gradient.Parent = background
+
+-- Blur Effect
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = game:GetService("Lighting")
+TweenService:Create(blur, TweenInfo.new(1), { Size = 10 }):Play()
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0.12, 0)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Garden Script"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 42
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextStrokeTransparency = 0.8
+title.TextTransparency = 1
+title.Parent = screenGui
+
+TweenService:Create(title, TweenInfo.new(1), { TextTransparency = 0 }):Play()
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(0, 200, 0, 20)
+subtitle.Position = UDim2.new(0.8, 0, 0.13, 0)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "made by pr1m0"
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextSize = 14
+subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+subtitle.TextXAlignment = Enum.TextXAlignment.Right
+subtitle.TextTransparency = 1
+subtitle.Parent = screenGui
+
+TweenService:Create(subtitle, TweenInfo.new(1), { TextTransparency = 0 }):Play()
+
+-- Cartoon Loading Bar
+local function createCartoonLoadingBar(duration, labelText, onComplete)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0.5, 0, 0.07, 0)
+	container.Position = UDim2.new(0.25, 0, 0.5, 0)
+	container.BackgroundTransparency = 1
+	container.Parent = screenGui
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0.4, 0)
+	label.Position = UDim2.new(0, 0, -0.6, 0)
+	label.Text = labelText or "Loading..."
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.FredokaOne
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextSize = 20
+	label.TextStrokeTransparency = 0.8
+	label.Parent = container
+
+	local bg = Instance.new("ImageLabel")
+	bg.Size = UDim2.new(1, 0, 0.6, 0)
+	bg.Position = UDim2.new(0, 0, 0.4, 0)
+	bg.BackgroundTransparency = 1
+	bg.Image = "rbxassetid://607247449"
+	bg.ScaleType = Enum.ScaleType.Slice
+	bg.SliceCenter = Rect.new(10, 10, 90, 90)
+	bg.Parent = container
+
+	local fill = Instance.new("Frame")
+	fill.Size = UDim2.new(0, 0, 1, 0)
+	fill.BackgroundColor3 = Color3.fromRGB(102, 255, 102)
+	fill.BorderSizePixel = 0
+	fill.BackgroundTransparency = 0.2
+	fill.Parent = bg
+
+	Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 12)
+	Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 12)
+
+	local percent = Instance.new("TextLabel")
+	percent.Size = UDim2.new(1, 0, 1, 0)
+	percent.BackgroundTransparency = 1
+	percent.Text = "0%"
+	percent.Font = Enum.Font.FredokaOne
+	percent.TextColor3 = Color3.new(1, 1, 1)
+	percent.TextSize = 16
+	percent.TextStrokeTransparency = 0.8
+	percent.Parent = bg
+
+	-- Smooth loading logic
+	coroutine.wrap(function()
+		local stuckPoints = { 80, 90, 99 }
+		local current = 0
+		for i = 1, 100 do
+			local delayTime = duration / 100
+			if table.find(stuckPoints, i) then
+				wait(delayTime * 5)
+			else
+				wait(delayTime)
+			end
+			current = i
+			fill.Size = UDim2.new(current / 100, 0, 1, 0)
+			percent.Text = current .. "%"
+		end
+		wait(0.5)
+		container:Destroy()
+		if onComplete then onComplete() end
+	end)()
+end
+
+-- Script Selection UI
+local function showScriptSelection()
+	-- Fade-in "Select Available Scripts"
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0, 30)
+	label.Position = UDim2.new(0, 0, 0.28, 0)
+	label.Text = "Select Available Scripts"
+	label.Font = Enum.Font.FredokaOne
+	label.TextSize = 22
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.BackgroundTransparency = 1
+	label.TextStrokeTransparency = 0.8
+	label.TextTransparency = 1
+	label.Parent = screenGui
+	TweenService:Create(label, TweenInfo.new(1), { TextTransparency = 0 }):Play()
+
+	-- Container
+	local selectFrame = Instance.new("Frame")
+	selectFrame.Size = UDim2.new(0.4, 0, 0.45, 0)
+	selectFrame.Position = UDim2.new(0.3, 0, 0.33, 0)
+	selectFrame.BackgroundTransparency = 0.3
+	selectFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	selectFrame.BorderSizePixel = 0
+	selectFrame.ClipsDescendants = true
+	selectFrame.Parent = screenGui
+	Instance.new("UICorner", selectFrame).CornerRadius = UDim.new(0, 20)
+
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.VerticalAlignment = Enum.VerticalAlignment.Top
+	layout.Padding = UDim.new(0, 10)
+	layout.Parent = selectFrame
+
+	-- Button Creator
+	local function createButton(name, status)
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0.9, 0, 0, 40)
+		btn.BackgroundColor3 = status == "Patched" and Color3.fromRGB(120, 50, 50) or Color3.fromRGB(60, 180, 60)
+		btn.BorderSizePixel = 0
+		btn.Text = ""
+		btn.AutoButtonColor = false
+		btn.Parent = selectFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Text = name
+		label.Font = Enum.Font.FredokaOne
+		label.TextSize = 18
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.TextStrokeTransparency = 0.8
+		label.Parent = btn
+
+		if status then
+			local hoverText = Instance.new("TextLabel")
+			hoverText.Text = status
+			hoverText.Size = UDim2.new(1, 0, 1, 0)
+			hoverText.BackgroundTransparency = 1
+			hoverText.Font = Enum.Font.FredokaOne
+			hoverText.TextSize = 16
+			hoverText.TextColor3 = Color3.fromRGB(255, 60, 60)
+			hoverText.TextStrokeTransparency = 0.5
+			hoverText.Visible = false
+			hoverText.Parent = btn
+
+			btn.MouseEnter:Connect(function()
+				btn.BackgroundTransparency = 0.6
+				label.Visible = false
+				hoverText.Visible = true
+			end)
+			btn.MouseLeave:Connect(function()
+				btn.BackgroundTransparency = 0
+				label.Visible = true
+				hoverText.Visible = false
+			end)
+		else
+			btn.MouseButton1Click:Connect(function()
+				title.Visible = false
+				subtitle.Visible = false
+				label.Visible = false
+				selectFrame:Destroy()
+				createCartoonLoadingBar(30, "Loading, please wait...", function()
+					-- loading done
+				end)
+			end)
+		end
+	end
+
+	-- Add buttons
+	createButton("Server Hop (Old Server)", "Currently Fixing")
+	createButton("Pet and Fruit Dupe (Beta)", "Currently Fixing")
+	createButton("Spawn Seed and Egg", "Patched")
+	createButton("Egg Detector / Reroll (Unpatched)", nil)
+end
+
+-- Start initial loading
+createCartoonLoadingBar(10, "Loading Assets...", function()
+	showScriptSelection()
+end)
